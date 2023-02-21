@@ -2,7 +2,10 @@ package com.example.demo.controllers;
 
 import java.util.Optional;
 
-import jdk.internal.icu.impl.Punycode;
+import com.example.demo.model.persistence.Role;
+import com.example.demo.model.persistence.RoleEnum;
+import com.example.demo.model.persistence.repositories.RoleRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
@@ -33,6 +36,9 @@ public class UserController {
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 
+	@Autowired
+	private RoleRepository roleRepository;
+
 	@GetMapping("/id/{id}")
 	public ResponseEntity<User> findById(@PathVariable Long id) {
 		return ResponseEntity.of(userRepository.findById(id));
@@ -57,13 +63,16 @@ public class UserController {
 		}
 
 		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
+		for (RoleEnum roleName : createUserRequest.getRoles()) {
+			Role role = new Role();
+			role.setName(roleName);
+			user.getRoles().add(role);
+			roleRepository.save(role);
+		}
 		userRepository.save(user);
 		return ResponseEntity.ok(user);
 	}
 
-	@Bean
-	public BCryptPasswordEncoder bCryptPasswordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+
 	
 }

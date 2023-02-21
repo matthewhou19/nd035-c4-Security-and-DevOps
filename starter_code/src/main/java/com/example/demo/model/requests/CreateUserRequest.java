@@ -1,6 +1,10 @@
 package com.example.demo.model.requests;
 
+import com.example.demo.model.persistence.Role;
+import com.example.demo.model.persistence.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Set;
 
 public class CreateUserRequest {
 
@@ -11,6 +15,17 @@ public class CreateUserRequest {
 
 	@JsonProperty
 	private String confirmPassword;
+
+	@JsonProperty
+	private Set<RoleEnum> roles;
+
+	public Set<RoleEnum> getRoles() {
+		return roles;
+	}
+
+	public void setRoles(Set<RoleEnum> roles) {
+		this.roles = roles;
+	}
 
 	public String getPassword() {
 		return password;
