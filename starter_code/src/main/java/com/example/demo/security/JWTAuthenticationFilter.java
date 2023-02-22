@@ -38,11 +38,12 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
             User credentials = new ObjectMapper()
                     .readValue(req.getInputStream(), User.class);
 
-            return authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            credentials.getUsername(),
-                            credentials.getPassword(),
-                            new ArrayList<>()));
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                    credentials.getUsername(),
+                    credentials.getPassword(),
+                    new ArrayList<>());
+        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+                    return authentication;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -54,16 +55,9 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             FilterChain chain,
                                             Authentication auth) throws IOException, ServletException {
 
-        User credentials = new ObjectMapper()
-                .readValue(req.getInputStream(), User.class);
-        UserDetails userDetails = userDetailService.loadUserByUsername(credentials.getUsername());
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities()
-        );
+        String token = JwtUtils.generateJwtToken(auth.getName());
 
-        String token = jwtUtils.generateJwtToken(authentication);
-
-
+        res.addHeader(SecurityConstants.HEADER_STRING, SecurityConstants.TOKEN_PREFIX + token);
     }
 
 }

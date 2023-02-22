@@ -12,15 +12,15 @@ import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 
 @Component
 public class JwtUtils {
-    public String generateJwtToken(Authentication authentication) {
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+    public static String generateJwtToken(String username) {
+
         return JWT.create()
-                .withSubject(userPrincipal.getUsername())
+                .withSubject(username)
                 .withExpiresAt(new Date(System.currentTimeMillis() + SecurityConstants.EXPIRATION_TIME))
                 .sign(Algorithm.HMAC512(SecurityConstants.SECRET.getBytes()));
     }
 
-    public String getUserNameFormJwtToken(String token) {
+    public static String getUserNameFormJwtToken(String token) {
         if (!validateJwtToken(token))  return null;
 
         return JWT.require(HMAC512(SecurityConstants.SECRET.getBytes())).build()
@@ -28,7 +28,7 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    private boolean validateJwtToken(String authToken){
+    private static boolean validateJwtToken(String authToken){
         try {
             JWT.require(HMAC512(SecurityConstants.SECRET.getBytes())).build()
                     .verify(authToken.replace(SecurityConstants.TOKEN_PREFIX, ""))

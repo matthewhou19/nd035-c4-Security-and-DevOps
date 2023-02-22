@@ -1,6 +1,8 @@
 package com.example.demo.security;
 
+import com.example.demo.model.persistence.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,9 +20,11 @@ import java.io.IOException;
 public class JWTAuthenticationVerificationFilter extends BasicAuthenticationFilter {
 
     @Autowired
-    private JwtUtils jwtUtils;
-    @Autowired
     private UserDetailServiceImpl userDetailService;
+
+    public void setUserDetailService(UserDetailServiceImpl userDetailService) {
+        this.userDetailService = userDetailService;
+    }
 
     public JWTAuthenticationVerificationFilter(AuthenticationManager authenticationManager) {
         super(authenticationManager);
@@ -34,10 +38,11 @@ public class JWTAuthenticationVerificationFilter extends BasicAuthenticationFilt
             chain.doFilter(req, res);
             return;
         }
-        String username = jwtUtils.getUserNameFormJwtToken(header);
+        String username = JwtUtils.getUserNameFormJwtToken(header);
         if (username == null) {
             chain.doFilter(req, res);
         }
+
         UserDetails userDetails = userDetailService.loadUserByUsername(username);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
