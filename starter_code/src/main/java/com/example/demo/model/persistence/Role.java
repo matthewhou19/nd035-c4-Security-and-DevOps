@@ -1,5 +1,6 @@
 package com.example.demo.model.persistence;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.persistence.*;
@@ -8,7 +9,7 @@ import javax.persistence.*;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonProperty
+    @JsonIgnore
     private Long id;
 
     public void setId(Long id) {
@@ -17,7 +18,7 @@ public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonProperty
+    @JsonIgnore
     public Long getId() {
         return id;
     }
