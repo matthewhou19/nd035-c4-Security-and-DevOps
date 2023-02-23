@@ -16,10 +16,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@Component
 public class JWTAuthenticationVerificationFilter extends BasicAuthenticationFilter {
 
-    @Autowired
+
     private UserDetailServiceImpl userDetailService;
 
     public void setUserDetailService(UserDetailServiceImpl userDetailService) {

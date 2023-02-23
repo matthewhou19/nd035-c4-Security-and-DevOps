@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.example.demo.model.persistence.Role;
@@ -44,14 +45,13 @@ public class UserController {
 
 
 	@GetMapping("/id/{id}")
-	@PreAuthorize("hasRole('User')")
+	@PreAuthorize("hasRole('User') or hasRole('Admin')")
 	public ResponseEntity<User> findById(@PathVariable Long id) {
-		System.out.println(userRepository.findById(id).toString());
 		return ResponseEntity.of(userRepository.findById(id));
 	}
 	
 	@GetMapping("/{username}")
-	@PreAuthorize("hasRole('User')")
+	@PreAuthorize("hasRole('User') or hasRole('Admin')")
 	public ResponseEntity<User> findByUserName(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
@@ -70,16 +70,33 @@ public class UserController {
 		}
 
 		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
+		if (createUserRequest.getRoles() == null || createUserRequest.getRoles().size() == 0) {
+			return ResponseEntity.badRequest().build();
+		}
 		for (RoleEnum roleName : createUserRequest.getRoles()) {
-			Role role = new Role();
-			role.setName(roleName);
-			user.getRoles().add(role);
-			roleRepository.save(role);
+			if (roleName != null) {
+				Role role = new Role();
+				role.setName(roleName);
+				user.getRoles().add(role);
+				roleRepository.save(role);
+			}
+
+		}
+		if (user.getRoles().size() < 1) {
+			return ResponseEntity.badRequest().build();
 		}
 		userRepository.save(user);
 		return ResponseEntity.ok(user);
 	}
 
-
-	
+	@GetMapping("/allUsers")
+	@PreAuthorize("hasRole('Admin')")
+	public ResponseEntity<List<User>> getAllUser() {
+		Role role = roleRepository.getByName(RoleEnum.Admin);
+		List<User> userList =userRepository.findAllByRolesContaining(role);
+		if (userList != null && userList.size() != 0) {
+			return  ResponseEntity.ok(userList);
+		}
+		return ResponseEntity.notFound().build();
+	}
 }
