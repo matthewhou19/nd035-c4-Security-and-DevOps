@@ -92,7 +92,7 @@ public class UserController {
 	@GetMapping("/allUsers")
 	@PreAuthorize("hasRole('Admin')")
 	public ResponseEntity<List<User>> getAllUser() {
-		Role role = roleRepository.getByName(RoleEnum.Admin);
+		Role role = roleRepository.getByName(RoleEnum.User);
 		List<User> userList =userRepository.findAllByRolesContaining(role);
 		if (userList != null && userList.size() != 0) {
 			return  ResponseEntity.ok(userList);

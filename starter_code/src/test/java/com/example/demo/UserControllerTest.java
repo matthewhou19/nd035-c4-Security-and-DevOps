@@ -2,6 +2,7 @@ package com.example.demo;
 
 
 import com.example.demo.controllers.UserController;
+import com.example.demo.model.persistence.Role;
 import com.example.demo.model.persistence.RoleEnum;
 import com.example.demo.model.persistence.User;
 import com.example.demo.model.persistence.repositories.CartRepository;
@@ -18,10 +19,11 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
+
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -40,8 +42,6 @@ public class UserControllerTest {
 
     @InjectMocks
     private UserController userController;
-
-
 
 
 
@@ -82,8 +82,39 @@ public class UserControllerTest {
         Assert.assertEquals(user.getPassword(), responseUser.getPassword());
     }
 
+    @Test
+    @WithMockUser(authorities = {"User"})
+    public void testBadGetId() {
+        ResponseEntity<User> responseEntity = userController.findById(1L);
+        Assert.assertEquals(404, responseEntity.getStatusCodeValue());
+    }
 
+    @Test
+    @WithMockUser(authorities = {"User"})
+    public void testGetByUserName() {
+        User user = generateUser();
+        when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
+        ResponseEntity<User> responseEntity = userController.findByUserName(user.getUsername());
+        User responseUser = responseEntity.getBody();
+        Assert.assertEquals(user.getUsername(), responseUser.getUsername());
+        Assert.assertEquals(user.getPassword(), responseUser.getPassword());
+    }
 
+    @Test
+    @WithMockUser(authorities = {"Admin"})
+    public void testGetAllUser(){
+        User user = generateUser();
+        Role userRole = new Role();
+        userRole.setName(RoleEnum.User);
+        when(roleRepository.getByName(RoleEnum.User)).thenReturn(userRole);
+        List<User> userList = new ArrayList<>();
+        userList.add(user);
+        when(userRepository.findAllByRolesContaining(userRole)).thenReturn(userList);
+        ResponseEntity<List<User>> responseEntity = userController.getAllUser();
+        List<User> userList1 = responseEntity.getBody();
+        Assert.assertEquals(userList1.get(0).getPassword(), userList.get(0).getPassword());
+        Assert.assertEquals(userList1.get(0).getUsername(), userList.get(0).getUsername());
+    }
 
 
     public User generateUser() {
