@@ -18,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -72,7 +71,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"User"})
+
     public void testGetById() {
         User user = generateUser();
         when(userRepository.findById(1L)).thenReturn(Optional.ofNullable(user));
@@ -83,14 +82,14 @@ public class UserControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"User"})
+
     public void testBadGetId() {
         ResponseEntity<User> responseEntity = userController.findById(1L);
         Assert.assertEquals(404, responseEntity.getStatusCodeValue());
     }
 
     @Test
-    @WithMockUser(authorities = {"User"})
+
     public void testGetByUserName() {
         User user = generateUser();
         when(userRepository.findByUsername(user.getUsername())).thenReturn(user);
@@ -101,7 +100,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @WithMockUser(authorities = {"Admin"})
+
     public void testGetAllUser(){
         User user = generateUser();
         Role userRole = new Role();
