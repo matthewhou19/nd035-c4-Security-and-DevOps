@@ -4,6 +4,8 @@ import com.example.demo.model.persistence.User;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
     private AuthenticationManager authenticationManager;
+    public static final Logger log = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
 
 
 
@@ -40,8 +43,13 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                     credentials.getPassword(),
                     new ArrayList<>());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        if (authentication.isAuthenticated()) {
+            log.info("Login successfully.");
+        }
+        log.info("Login unsuccessfully.");
                     return authentication;
         } catch (IOException e) {
+            log.warn("Login exception.");
             throw new RuntimeException(e);
         }
     }

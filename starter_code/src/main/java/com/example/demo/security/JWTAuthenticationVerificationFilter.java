@@ -1,6 +1,8 @@
 package com.example.demo.security;
 
 import com.example.demo.model.persistence.repositories.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class JWTAuthenticationVerificationFilter extends BasicAuthenticationFilter {
-
+    public static final Logger log = LoggerFactory.getLogger(JWTAuthenticationVerificationFilter.class);
 
     private UserDetailServiceImpl userDetailService;
 
@@ -39,9 +41,10 @@ public class JWTAuthenticationVerificationFilter extends BasicAuthenticationFilt
         }
         String username = JwtUtils.getUserNameFormJwtToken(header);
         if (username == null) {
+            log.info("JWT authentication unsuccessfully.");
             chain.doFilter(req, res);
         }
-
+        log.info("JWT authentication successfully.");
         UserDetails userDetails = userDetailService.loadUserByUsername(username);
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
