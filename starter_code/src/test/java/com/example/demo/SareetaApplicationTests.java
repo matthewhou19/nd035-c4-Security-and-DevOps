@@ -1,8 +1,9 @@
 package com.example.demo;
 
-import com.example.demo.model.persistence.RoleEnum;
-import com.example.demo.model.persistence.User;
+import com.example.demo.model.persistence.*;
+import com.example.demo.model.persistence.repositories.ItemRepository;
 import com.example.demo.model.requests.CreateUserRequest;
+import com.example.demo.model.requests.ModifyCartRequest;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.json.JSONException;
@@ -24,6 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.HttpClientErrorException;
 
 import javax.validation.constraints.Null;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +39,9 @@ public class SareetaApplicationTests {
 	private int port;
 
 	@Autowired
+	ItemRepository itemRepository;
+
+	@Autowired
 	private TestRestTemplate restTemplate;
 
 	private HttpHeaders httpHeaders;
@@ -44,7 +49,19 @@ public class SareetaApplicationTests {
 	@Before
 	public void getJwt() {
 		initialize(RoleEnum.User, "username", "userPassword");
+		itemRepository.save(generateItem("ItemName1"));
+		itemRepository.save(generateItem("ItemName2"));
+		itemRepository.save(generateItem("ItemName3"));
+		itemRepository.save(generateItem("ItemName4"));
+		itemRepository.save(generateItem("ItemName5"));
 		//System.out.println(jwt);
+	}
+
+
+
+
+	@Test
+	public void contextLoads() {
 	}
 
 	@Test
@@ -64,11 +81,19 @@ public class SareetaApplicationTests {
 		Assert.assertEquals("username", responseEntitys.getBody().get(0).getUsername());
 	}
 
-	
-
 	@Test
-	public void contextLoads() {
+	public void userOrderTest() {
+		addCart(1, 6L);
+		addCart(2, 7L);
+		addCart(3, 3L);
+		addCart(4, 4L);
+		addCart(5, 5L);
+		submitOrder("username");
+		List<UserOrder> userOrderList = orderHistory("username");
+		Assert.assertEquals(1665,userOrderList.get(0).getTotal().intValueExact());
+		Assert.assertEquals("ItemName4", userOrderList.get(0).getItems().get(0).getName());
 	}
+
 
 	private void initialize(RoleEnum roleEnum, String username, String password){
 		CreateUserRequest createUserRequest =generateCUR(roleEnum, username, password);
@@ -121,6 +146,43 @@ public class SareetaApplicationTests {
 		set.add(roleEnum);
 		createUserRequest.setRoles(set);
 		return createUserRequest;
+	}
+
+	private Item generateItem(String itemName) {
+		Item item = new Item();
+		item.setDescription("Description for an item.");
+		item.setPrice(new BigDecimal(111));
+		item.setName(itemName);
+		return item;
+	}
+
+	private ModifyCartRequest generateCartRequest(int num, long id) {
+		ModifyCartRequest cartRequest = new ModifyCartRequest();
+		cartRequest.setQuantity(num);
+		cartRequest.setItemId(id);
+		cartRequest.setUsername("username");
+		return cartRequest;
+	}
+
+	private void addCart(int num, long id) {
+		ModifyCartRequest cartRequest =generateCartRequest(num, id);
+		String url = "http://localhost:" + port + "/api/cart/addToCart";
+		HttpEntity<ModifyCartRequest> requestHttpEntity = new HttpEntity<>(cartRequest, httpHeaders);
+		ResponseEntity<Cart> responseEntity = restTemplate.postForEntity(url, requestHttpEntity, Cart.class);
+	}
+
+	private void submitOrder(String username) {
+		String url = "http://localhost:" + port + "/api/order/submit/" + username;
+		HttpEntity<ModifyCartRequest> requestHttpEntity = new HttpEntity<>(null, httpHeaders);
+		ResponseEntity<UserOrder> responseEntity = restTemplate.postForEntity(url, requestHttpEntity, UserOrder.class);
+
+	}
+
+	private List<UserOrder> orderHistory(String username) {
+		String url = "http://localhost:" + port + "/api/order/history/" + username;
+		HttpEntity<ModifyCartRequest> requestHttpEntity = new HttpEntity<>(null, httpHeaders);
+		ResponseEntity<List<UserOrder>> responseEntity = restTemplate.exchange(url, HttpMethod.GET,requestHttpEntity, new ParameterizedTypeReference<List<UserOrder>>() {} );
+		return responseEntity.getBody();
 	}
 
 }
